@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cellular Automaton Explorer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div id="page">
+
+  <header>
+    <div id="header-left">
+      <h1>Cellular Automaton Explorer</h1>
+      <p class="tagline">1D Wolfram rules &nbsp;·&nbsp; complexity metrics &nbsp;·&nbsp; emergence classifier</p>
+    </div>
+    <div id="header-right">
+      <div class="preset-group">
+        <span class="preset-label">Presets</span>
+        <button class="preset-btn" data-rule="30">Rule 30 <span class="preset-note">chaos</span></button>
+        <button class="preset-btn" data-rule="110">Rule 110 <span class="preset-note">universal</span></button>
+        <button class="preset-btn" data-rule="90">Rule 90 <span class="preset-note">fractal</span></button>
+        <button class="preset-btn" data-rule="4">Rule 4 <span class="preset-note">stable</span></button>
+        <button class="preset-btn" data-rule="0">Rule 0 <span class="preset-note">dies</span></button>
+      </div>
+    </div>
+  </header>
+
+  <div id="main-layout">
+
+    <aside id="controls">
+
+      <section class="control-block">
+        <label class="control-label">Rule number (0 to 255)</label>
+        <div class="rule-input-row">
+          <input type="number" id="rule-input" min="0" max="255" value="30" />
+          <button id="run-btn">Run</button>
+        </div>
+        <input type="range" id="rule-slider" min="0" max="255" value="30" />
+      </section>
+
+      <section class="control-block">
+        <label class="control-label">Rule DNA</label>
+        <div id="rule-dna"></div>
+        <p class="dna-caption">8-bit rule table. Each bit controls one neighbourhood pattern.</p>
+      </section>
+
+      <section class="control-block">
+        <label class="control-label">Settings</label>
+        <div class="setting-row">
+          <span>Speed</span>
+          <input type="range" id="speed-slider" min="1" max="20" value="8" />
+          <span id="speed-val">8</span>
+        </div>
+        <div class="setting-row">
+          <span>Width</span>
+          <input type="range" id="width-slider" min="100" max="600" value="300" step="50" />
+          <span id="width-val">300</span>
+        </div>
+        <div class="setting-row">
+          <span>Cell size</span>
+          <input type="range" id="cell-slider" min="1" max="6" value="2" />
+          <span id="cell-val">2px</span>
+        </div>
+        <div class="setting-row">
+          <span>Start</span>
+          <select id="init-select">
+            <option value="single">Single centre cell</option>
+            <option value="random">Random</option>
+            <option value="pattern">Alternating</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="control-block">
+        <div class="btn-row">
+          <button id="pause-btn">Pause</button>
+          <button id="clear-btn">Clear</button>
+          <button id="step-btn">Step</button>
+        </div>
+      </section>
+
+    </aside>
+
+    <div id="centre">
+
+      <div id="canvas-wrap">
+        <canvas id="ca-canvas"></canvas>
+        <div id="gen-counter">Generation <span id="gen-num">0</span></div>
+      </div>
+
+      <div id="metrics-row">
+        <div class="metric-card" id="card-class">
+          <div class="metric-title">Wolfram Class</div>
+          <div class="metric-val" id="val-class">—</div>
+          <div class="metric-sub" id="sub-class">run to classify</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Langton Lambda</div>
+          <div class="metric-val" id="val-lambda">—</div>
+          <div class="metric-sub" id="sub-lambda">fraction of live outputs</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Shannon Entropy</div>
+          <div class="metric-val" id="val-entropy">—</div>
+          <div class="metric-sub" id="sub-entropy">bits per cell (latest gen)</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">LZ Complexity</div>
+          <div class="metric-val" id="val-lz">—</div>
+          <div class="metric-sub" id="sub-lz">distinct substrings</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Prediction</div>
+          <div class="metric-val" id="val-pred">—</div>
+          <div class="metric-sub" id="sub-pred">before running</div>
+        </div>
+      </div>
+
+      <div id="explanation-box">
+        <div id="explanation-text">Select a rule and hit Run to start. Try Rule 110 — it is Turing complete, meaning it can theoretically compute anything a normal computer can.</div>
+      </div>
+
+    </div>
+
+    <div id="right-panel">
+
+      <section class="panel-block">
+        <h3>Scatter Plot</h3>
+        <p class="panel-caption">Lambda vs entropy across all 256 rules. Click any dot to load that rule.</p>
+        <canvas id="scatter-canvas" width="260" height="220"></canvas>
+        <div id="scatter-legend">
+          <span class="leg-item class-I">Class I</span>
+          <span class="leg-item class-II">Class II</span>
+          <span class="leg-item class-III">Class III</span>
+          <span class="leg-item class-IV">Class IV</span>
+        </div>
+      </section>
+
+      <section class="panel-block">
+        <h3>Entropy Over Time</h3>
+        <canvas id="entropy-canvas" width="260" height="130"></canvas>
+      </section>
+
+      <section class="panel-block">
+        <h3>About the metrics</h3>
+        <div class="info-text">
+          <p><strong>Lambda (λ)</strong> counts what fraction of rule outputs are alive. Rules near λ = 0.5 tend to produce complex behaviour.</p>
+          <p><strong>Shannon Entropy</strong> measures how unpredictable each row is. High entropy means chaotic, low means ordered.</p>
+          <p><strong>LZ Complexity</strong> counts how many distinct substrings are needed to build the output string from scratch. Low compression ratio means high complexity.</p>
+        </div>
+      </section>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script src="metrics.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
